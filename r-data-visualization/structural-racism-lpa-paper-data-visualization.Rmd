@@ -38,6 +38,14 @@ lpa_results$three_class_pred<-as.factor(lpa_results$three_class_pred)
 lpa_results$four_class_pred<-as.factor(lpa_results$four_class_pred)
 lpa_results$five_class_pred<-as.factor(lpa_results$five_class_pred)
 
+#Recode data to switch 1 and 2 for three_class_pred for visualization purposes 
+lpa_results <- lpa_results %>% mutate(three_class_pred_reordered = 
+                           case_when(three_class_pred == 2 ~ 1,
+                                     three_class_pred == 1 ~ 2,
+                                     three_class_pred == 3 ~ 3))
+#Factor data
+lpa_results$three_class_pred_reordered<-as.factor(lpa_results$three_class_pred_reordered)
+
 # Save as dataframe
 lpa_results<-as.data.frame(lpa_results)
 ```
@@ -98,12 +106,12 @@ $~$
 # Create map of 3-class model
 viz_3<- statebins(lpa_results, 
                     state_col= "state", 
-                    value_col= "three_class_pred", 
+                    value_col= "three_class_pred_reordered", 
                     dark_label = "black", 
                     font_size = 5, 
                     ggplot2_scale_function = scale_fill_manual,
                     name = "Typology",
-                    values = c("1"= "#e0a51b", "2" = "#1b28e0", "3" = "#18b25b")) +
+                    values = c("1"= "#00AFBB", "2" = "#E7B800", "3" = "#FC4E07")) +
   theme_statebins(legend_position= "right") + 
   theme(legend.text = element_text(size=15), legend.title = element_text(size=15))
 
@@ -355,9 +363,9 @@ $~$
 med_data <- structural_racism_with_lpa
 
 # Subset by class
-class1<- med_data %>% filter(three_class_pred == 1)
-class2<- med_data %>% filter(three_class_pred == 2)
-class3<- med_data %>% filter(three_class_pred == 3)
+class1<- med_data %>% filter(three_class_pred_reordered == 1)
+class2<- med_data %>% filter(three_class_pred_reordered == 2)
+class3<- med_data %>% filter(three_class_pred_reordered == 3)
 
 class1<- class1 %>% mutate(
   education_median = median(no_college_RR, na.rm= TRUE), 
@@ -389,12 +397,12 @@ all_classes<- rbind(class1, class2, class3)
 
 ```{r}
 # Call functions
-legendplot <- legend_function(all_classes, all_classes$three_class_pred)
-p2 <- education_function(all_classes, all_classes$three_class_pred)
-p3 <- unemployment_function(all_classes, all_classes$three_class_pred)
-p4 <- income_function(all_classes, all_classes$three_class_pred)
-p5 <- homeownership_function(all_classes, all_classes$three_class_pred)
-p6 <- incarceration_function(all_classes, all_classes$three_class_pred)
+legendplot <- legend_function(all_classes, all_classes$three_class_pred_reordered)
+p2 <- education_function(all_classes, all_classes$three_class_pred_reordered)
+p3 <- unemployment_function(all_classes, all_classes$three_class_pred_reordered)
+p4 <- income_function(all_classes, all_classes$three_class_pred_reordered)
+p5 <- homeownership_function(all_classes, all_classes$three_class_pred_reordered)
+p6 <- incarceration_function(all_classes, all_classes$three_class_pred_reordered)
 ```
 
 ```{r}
@@ -588,7 +596,7 @@ include_graphics("cluster_plot_5_class.jpeg")
 
 ## Sankey plot
 
-
+```{r, eval = F}
 dat <- read.csv("v4_all_class_pred_10-29-23.csv")
 
 dat %<>% mutate(two_class_recoded = two_class_pred,
@@ -627,3 +635,4 @@ ggplot(dat_long, aes(x = model_num, y = value_jitter)) +
   theme_bw() + theme(legend.position="none")
 
 ggsave(filename = "sankey-plot.png", device = "png", width = 7, height = 4.5, dpi = 300)
+```
