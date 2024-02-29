@@ -103,7 +103,7 @@ $~$
 ### Map of 3-class model
 
 ```{r}
-# Create map of 3-class model
+# Color option #1 - Create map of 3-class model
 viz_3<- statebins(lpa_results, 
                     state_col= "state", 
                     value_col= "three_class_pred_reordered", 
@@ -117,7 +117,21 @@ viz_3<- statebins(lpa_results,
 
 viz_3
 ```
+```{r}
+# Color option #2 - Create map of 3-class model
+viz_3<- statebins(lpa_results, 
+                    state_col= "state", 
+                    value_col= "three_class_pred_reordered", 
+                    dark_label = "black", 
+                    font_size = 5, 
+                    ggplot2_scale_function = scale_fill_manual,
+                    name = "Typology",
+                    values = c("1"= "#CCCCFF", "2" = "#3333FF", "3" = "#000099")) +
+  theme_statebins(legend_position= "right") + 
+  theme(legend.text = element_text(size=15), legend.title = element_text(size=15))
 
+viz_3
+```
 ```{r}
 # Save as jpeg
 # jpeg(filename= "map_3_class.jpeg", width= 900, height= 600, quality= 100)
