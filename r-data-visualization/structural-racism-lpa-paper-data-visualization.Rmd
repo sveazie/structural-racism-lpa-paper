@@ -588,7 +588,7 @@ include_graphics("cluster_plot_5_class.jpeg")
 
 ## Sankey plot
 
-```{r, eval = F}
+
 dat <- read.csv("v4_all_class_pred_10-29-23.csv")
 
 dat %<>% mutate(two_class_recoded = two_class_pred,
@@ -626,5 +626,4 @@ ggplot(dat_long, aes(x = model_num, y = value_jitter)) +
   scale_y_continuous(labels = c("A", "B", "C", "D", "E"), breaks = c(0, 1, 2, 3, 4)) + 
   theme_bw() + theme(legend.position="none")
 
-# ggsave(filename = "sankey-plot.png", device = "png", width = 7, height = 4.5, dpi = 300)
-```
+ggsave(filename = "sankey-plot.png", device = "png", width = 7, height = 4.5, dpi = 300)
