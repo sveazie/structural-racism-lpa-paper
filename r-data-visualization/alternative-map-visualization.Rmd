@@ -1,0 +1,155 @@
+---
+title: "Alternative map vizualization"
+author: "Stephanie Veazie"
+date: "2024-03-15"
+output: html_document
+---
+
+```{r}
+# Install libraries
+library(tidyverse)
+library(statebins)
+library(ggrepel)
+library(cowplot)
+library(knitr)
+library(magrittr)
+library(dplyr)
+library(mapproj)
+```
+
+
+```{r}
+# Import LPA results
+lpa_results <- read.csv("v4_all_class_pred_10-29-23.csv")
+
+# Factor data
+lpa_results$two_class_pred<-as.factor(lpa_results$two_class_pred)
+lpa_results$three_class_pred<-as.factor(lpa_results$three_class_pred)
+lpa_results$four_class_pred<-as.factor(lpa_results$four_class_pred)
+lpa_results$five_class_pred<-as.factor(lpa_results$five_class_pred)
+
+#Recode data to switch 1 and 2 for three_class_pred for visualization purposes 
+lpa_results <- lpa_results %>% mutate(three_class_pred_reordered = 
+                           case_when(three_class_pred == 2 ~ 1,
+                                     three_class_pred == 1 ~ 2,
+                                     three_class_pred == 3 ~ 3))
+#Factor data
+lpa_results$three_class_pred_reordered<-as.factor(lpa_results$three_class_pred_reordered)
+
+# Save as dataframe
+lpa_results<-as.data.frame(lpa_results)
+```
+
+### Import structural racism domain data
+
+```{r}
+# Import structural racism domain data
+structural_racism <- read.csv("structural_racism_no_dc_10-25-23.csv")
+
+# Merge structural racism domain & LPA Result datasets
+structural_racism_with_lpa <- merge(structural_racism, lpa_results, by.x = "state", by.y = "state")
+```
+
+### Import US Census region & division data
+
+```{r}
+# Import data on US Census Bureau region & division
+us_census<- read.csv("us_census_bureau_regions_and_divisions.csv")
+
+# Remove DC
+us_census<- us_census %>% filter(State !="District of Columbia")
+
+# Merge with existing dataset
+lpa_results_r <- merge(structural_racism_with_lpa, us_census, by.x = "state", by.y = "State")
+
+# Lowercase state column to fit with map_data dataset
+lpa_results_r$state <- tolower(lpa_results_r$state)
+```
+
+## Alternative map visualization
+
+### Map of 2-class model
+
+```{r}
+# Create map of 2-class model
+ggplot() +
+  geom_map(data = map_data("state"), map = map_data("state"),
+           aes(x = long, y = lat, map_id = region, group = group), 
+           fill = "gray", color = "black", size = 0.3) +
+  geom_map(data = lpa_results_r, map = map_data("state"),
+           aes(fill = factor(two_class_pred), map_id = state), 
+           color = "black", size = 0.3) + 
+  scale_fill_manual(values = c("1"= "#e0a51b", "2" = "#1b28e0")) +
+  expand_limits(x = map_data("state")$long, y = map_data("state")$lat) +
+  coord_map() +
+  theme_void() +
+  labs(title = "Two-Typology Model",
+       fill = "Typology") +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+### Map of 3-class model
+
+```{r}
+# Create map of 2-class model
+lpa_results_r$state <- tolower(lpa_results_r$state)
+
+ggplot() +
+  geom_map(data = map_data("state"), map = map_data("state"),
+           aes(x = long, y = lat, map_id = region, group = group), 
+           fill = "gray", color = "black", size = 0.3) +
+  geom_map(data = lpa_results_r, map = map_data("state"),
+           aes(fill = factor(three_class_pred_reordered), map_id = state), 
+           color = "black", size = 0.3) + 
+  scale_fill_manual(values = c("1"= "#CCCCFF", "2" = "#3333FF", "3" = "#000099")) +
+  expand_limits(x = map_data("state")$long, y = map_data("state")$lat) +
+  coord_map() +
+  theme_void() +
+  labs(title = "Three Typology Model",
+       fill = "Class") +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+### Map of 4-class model
+
+```{r}
+# Create map of 2-class model
+lpa_results_r$state <- tolower(lpa_results_r$state)
+
+ggplot() +
+  geom_map(data = map_data("state"), map = map_data("state"),
+           aes(x = long, y = lat, map_id = region, group = group), 
+           fill = "gray", color = "black", size = 0.3) +
+  geom_map(data = lpa_results_r, map = map_data("state"),
+           aes(fill = factor(four_class_pred), map_id = state), 
+           color = "black", size = 0.3) + 
+  scale_fill_manual(values = c("1"= "#e0a51b", "2" = "#1b28e0", "3" = "#18b25b", "4" = "purple")) +
+  expand_limits(x = map_data("state")$long, y = map_data("state")$lat) +
+  coord_map() +
+  theme_void() +
+  labs(title = "Three Typology Model",
+       fill = "Class") +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+### Map of 5-class model
+
+```{r}
+lpa_results_r$state <- tolower(lpa_results_r$state)
+
+ggplot() +
+  geom_map(data = map_data("state"), map = map_data("state"),
+           aes(x = long, y = lat, map_id = region, group = group), 
+           fill = "gray", color = "black", size = 0.3) +
+  geom_map(data = lpa_results_r, map = map_data("state"),
+           aes(fill = factor(five_class_pred), map_id = state), 
+           color = "black", size = 0.3) + 
+  scale_fill_manual(values = c("1"= "#e0a51b", "2" = "#1b28e0", "3" = "#18b25b", 
+                               "4" = "purple", "5" = "pink")) +
+  expand_limits(x = map_data("state")$long, y = map_data("state")$lat) +
+  coord_map() +
+  theme_void() +
+  labs(title = "Three Typology Model",
+       fill = "Class") +
+  theme(plot.title = element_text(hjust = 0.5))
+```
