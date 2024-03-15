@@ -73,7 +73,7 @@ us_census<- us_census %>% filter(State !="District of Columbia")
 structural_racism_with_lpa <- merge(structural_racism_with_lpa, us_census, by.x = "state", by.y = "State")
 ```
 
-## Maps - Version 1
+## Maps
 
 ### Map of 2-class model
 

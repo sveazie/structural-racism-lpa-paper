@@ -2,7 +2,8 @@
 title: "Alternative map vizualization"
 author: "Stephanie Veazie"
 date: "2024-03-15"
-output: html_document
+output:
+  pdf_document: default
 ---
 
 ```{r}
@@ -71,8 +72,8 @@ lpa_results_r$state <- tolower(lpa_results_r$state)
 ### Map of 2-class model
 
 ```{r}
-# Create map of 2-class model
-ggplot() +
+viz1<- 
+  ggplot() +
   geom_map(data = map_data("state"), map = map_data("state"),
            aes(x = long, y = lat, map_id = region, group = group), 
            fill = "gray", color = "black", size = 0.3) +
@@ -83,40 +84,42 @@ ggplot() +
   expand_limits(x = map_data("state")$long, y = map_data("state")$lat) +
   coord_map() +
   theme_void() +
-  labs(title = "Two-Typology Model",
-       fill = "Typology") +
-  theme(plot.title = element_text(hjust = 0.5))
+  labs(fill = "Typology") +
+  theme(legend.text = element_text(size=15), legend.title = element_text(size=15))
+
+jpeg(filename= "alt_map_2_class.jpeg", width= 900, height= 600, quality= 100)
+print(viz1)
 ```
 
 ### Map of 3-class model
 
 ```{r}
-# Create map of 2-class model
-lpa_results_r$state <- tolower(lpa_results_r$state)
-
-ggplot() +
+viz2<- 
+  ggplot() +
   geom_map(data = map_data("state"), map = map_data("state"),
            aes(x = long, y = lat, map_id = region, group = group), 
            fill = "gray", color = "black", size = 0.3) +
   geom_map(data = lpa_results_r, map = map_data("state"),
            aes(fill = factor(three_class_pred_reordered), map_id = state), 
            color = "black", size = 0.3) + 
-  scale_fill_manual(values = c("1"= "#CCCCFF", "2" = "#3333FF", "3" = "#000099")) +
+  scale_fill_manual(values = c("1"= "#9999FF", "2" = "#6666FF", "3" = "#3333FF")) +
   expand_limits(x = map_data("state")$long, y = map_data("state")$lat) +
   coord_map() +
   theme_void() +
-  labs(title = "Three Typology Model",
-       fill = "Class") +
-  theme(plot.title = element_text(hjust = 0.5))
+  labs(fill = "Typology") +
+  theme(legend.text = element_text(size=15), legend.title = element_text(size=15))
+
+jpeg(filename= "alt_map_3_class.jpeg", width= 900, height= 600, quality= 100)
+print(viz2)
 ```
 
 ### Map of 4-class model
 
 ```{r}
-# Create map of 2-class model
 lpa_results_r$state <- tolower(lpa_results_r$state)
 
-ggplot() +
+viz3<- 
+  ggplot() +
   geom_map(data = map_data("state"), map = map_data("state"),
            aes(x = long, y = lat, map_id = region, group = group), 
            fill = "gray", color = "black", size = 0.3) +
@@ -127,17 +130,18 @@ ggplot() +
   expand_limits(x = map_data("state")$long, y = map_data("state")$lat) +
   coord_map() +
   theme_void() +
-  labs(title = "Three Typology Model",
-       fill = "Class") +
-  theme(plot.title = element_text(hjust = 0.5))
+  labs(fill = "Typology") +
+  theme(legend.text = element_text(size=15), legend.title = element_text(size=15))
+
+jpeg(filename= "alt_map_4_class.jpeg", width= 900, height= 600, quality= 100)
+print(viz3)
 ```
 
 ### Map of 5-class model
 
 ```{r}
-lpa_results_r$state <- tolower(lpa_results_r$state)
-
-ggplot() +
+viz4<- 
+  ggplot() +
   geom_map(data = map_data("state"), map = map_data("state"),
            aes(x = long, y = lat, map_id = region, group = group), 
            fill = "gray", color = "black", size = 0.3) +
@@ -149,7 +153,9 @@ ggplot() +
   expand_limits(x = map_data("state")$long, y = map_data("state")$lat) +
   coord_map() +
   theme_void() +
-  labs(title = "Three Typology Model",
-       fill = "Class") +
-  theme(plot.title = element_text(hjust = 0.5))
+  labs(fill = "Typology") +
+  theme(legend.text = element_text(size=15), legend.title = element_text(size=15))
+
+jpeg(filename= "alt_map_5_class.jpeg", width= 900, height= 600, quality= 100)
+print(viz4)
 ```
