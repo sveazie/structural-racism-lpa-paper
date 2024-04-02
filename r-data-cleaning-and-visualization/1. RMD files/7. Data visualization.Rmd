@@ -33,7 +33,7 @@ library(usmap)
 
 ```{r}
 # Import LPA results
-lpa_results <- read.csv("../3. Cleaned data files/v4_all_class_pred_10-29-23.csv")
+lpa_results <- read.csv("../3. Cleaned data files/all_class_pred_4-2-24.csv")
 
 # Factor data
 lpa_results$two_class_pred<-as.factor(lpa_results$two_class_pred)

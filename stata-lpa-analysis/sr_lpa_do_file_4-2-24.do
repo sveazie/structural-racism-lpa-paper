@@ -1,14 +1,14 @@
 capture log close
 
-log using v4_log_file.log, replace
+log using sr_lpa_log_file.log, replace
 
 clear all
 
-use structural_racism_no_dc_10-25-23.dta
+use structural_racism_no_dc_3-30-24.dta
 
 browse state no_college_RR unemployment_RR median_income_ratio renters_RR incarceration_RR
 
-save v4_output_10-29-23, replace
+save sr_lpa_output_4-2-24, replace
 
 // Create general structural equation model with 5 variables, SPECIFYING 2 LATENT CLASSES
 gsem(no_college_RR unemployment_RR median_income_ratio renters_RR incarceration_RR <- _cons) ///

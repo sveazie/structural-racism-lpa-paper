@@ -142,3 +142,5 @@ median_income <- median(structural_racism$median_income_ratio, na.rm= TRUE)
 median_renters <- median(structural_racism$renters_RR, na.rm= TRUE)
 median_incarceration <- median(structural_racism$incarceration_RR, na.rm= TRUE)
 ```
+
+note
