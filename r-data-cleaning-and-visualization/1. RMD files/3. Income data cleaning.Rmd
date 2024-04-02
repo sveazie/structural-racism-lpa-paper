@@ -1,0 +1,260 @@
+---
+title: "Income data cleaning"
+author: "Stephanie Veazie"
+date: "2022-12-05"
+output:
+  word_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Download median income data
+
+1. Go to https://data.census.gov/cedsci/
+
+2. Select "Advanced search." 
+
+3. Using the filter pane on the left-hand side of the page, under "Geography", select "State" then "All states with in the US, Puerto Rico, and the Island Areas." 
+
+4. Under "Topics," select "Race and ethnicity" then "Race and ethnicity" again.
+
+5. Under "Topics," select "Income and poverty" then "Income and earnings" then "Income and earnings"
+
+5. Click blue "Search" button in the bottom right-hand corner.
+
+6. In the top search bar, enter in "S1903" then select "S1903 Median income in the past 12 months (in 2021 inflation-adjusted dollars)" from the menu that appears. 
+
+7. Under drop-down menu, select "2019: ACS 5-year estimates subject tables"
+
+8. Click "transpose." 
+
+9. Download as a csv file. 
+
+## Import and clean median income data file
+
+```{r}
+# Load libraries
+library(tidyverse)
+library(dplyr)
+
+# Import data
+median_income<-read_csv("../2. Raw data files/acs_median_income_2015-2019.csv")
+```
+
+```{r}
+# Limit to first 13 columns
+median_income<- median_income[,1:13]
+
+# Rename columns
+colnames(median_income)<- c("variable", 
+                           "blank_column", 
+                           "total_all_categories", 
+                           "second_blank_column",
+                           "white", 
+                           "black", 
+                           "american_indian",
+                           "asian",
+                           "native_hawaiian",
+                           "other_race", 
+                           "two_races", 
+                           "hispanic",
+                           "white_non_hispanic")
+```
+
+```{r}
+# Create vectors for specific states. Specify r (# of rows/state.) 
+# NOTE - Puerto Rico comes at the end of the list for all ACS datasets.
+
+r<- 10
+
+alabama_vector<-rep("Alabama", times= r)
+alaska_vector<-rep("Alaska", times=r)
+arizona_vector<-rep("Arizona", times=r)
+arkansas_vector<-rep("Arkansas", times=r)
+california_vector<-rep("California", times=r)
+colorado_vector<-rep("Colorado", times=r)
+connecticut_vector<-rep("Connecticut", times=r)
+delaware_vector<-rep("Delaware", times=r)
+dc_vector<-rep("District of Columbia", times=r)
+florida_vector<-rep("Florida", times=r)
+georgia_vector<-rep("Georgia", times=r)
+hawaii_vector<-rep("Hawaii", times=r)
+idaho_vector<-rep("Idaho", times=r)
+illinois_vector<-rep("Illinois", times=r)
+indiana_vector<-rep("Indiana", times=r)
+iowa_vector<-rep("Iowa", times=r)
+kansas_vector<-rep("Kansas", times=r)
+kentucky_vector<-rep("Kentucky", times=r)
+louisiana_vector<-rep("Louisiana", times=r)
+maine_vector<-rep("Maine", times=r)
+maryland_vector<-rep("Maryland", times=r)
+massachusetts_vector<-rep("Massachusetts", times=r)
+michigan_vector<-rep("Michigan", times=r)
+minnesota_vector<-rep("Minnesota", times=r)
+mississippi_vector<-rep("Mississippi", times=r)
+missouri_vector<-rep("Missouri", times=r)
+montana_vector<-rep("Montana", times=r)
+nebraska_vector<-rep("Nebraska", times=r)
+nevada_vector<-rep("Nevada", times=r)
+newhampshire_vector<-rep("New Hampshire", times=r)
+newjersey_vector<-rep("New Jersey", times=r)
+newmexico_vector<-rep("New Mexico", times=r)
+newyork_vector<-rep("New York", times=r)
+northcarolina_vector<-rep("North Carolina", times=r)
+northdakota_vector<-rep("North Dakota", times=r)
+ohio_vector<-rep("Ohio", times=r)
+oklahoma_vector<-rep("Oklahoma", times=r)
+oregon_vector<-rep("Oregon", times=r)
+pennsylvania_vector<-rep("Pennsylvania", times=r)
+rhodeisland_vector<-rep("Rhode Island", times=r)
+southcarolina_vector<-rep("South Carolina", times=r)
+southdakota_vector<-rep("South Dakota", times=r)
+tennessee_vector<-rep("Tennessee", times=r)
+texas_vector<-rep("Texas", times=r)
+utah_vector<-rep("Utah", times=r)
+vermont_vector<-rep("Vermont", times=r)
+virginia_vector<-rep("Virginia", times=r)
+washington_vector<-rep("Washington", times=r)
+westvirginia_vector<-rep("West Virginia", times=r)
+wisconsin_vector<-rep("Wisconsin", times=r)
+wyoming_vector<-rep("Wyoming", times=r)
+puertorico_vector<-rep("Puerto Rico", times=r)
+```
+
+```{r}
+# Create a single state vector made up of all the individual state vectors. 
+state_vector<-c(alabama_vector, 
+                alaska_vector, 
+                arizona_vector,
+                arkansas_vector, 
+                california_vector,
+                colorado_vector,
+                connecticut_vector,
+                delaware_vector,
+                dc_vector,
+                florida_vector, 
+                georgia_vector,
+                hawaii_vector,
+                idaho_vector, 
+                illinois_vector,
+                indiana_vector, 
+                iowa_vector, 
+                kansas_vector,
+                kentucky_vector,
+                louisiana_vector,
+                maine_vector,
+                maryland_vector,
+                massachusetts_vector, 
+                michigan_vector,
+                minnesota_vector,
+                mississippi_vector,
+                missouri_vector,
+                montana_vector,
+                nebraska_vector,
+                nevada_vector,
+                newhampshire_vector,
+                newjersey_vector,
+                newmexico_vector,
+                newyork_vector,
+                northcarolina_vector,
+                northdakota_vector,
+                ohio_vector,
+                oklahoma_vector,
+                oregon_vector,
+                pennsylvania_vector,
+                rhodeisland_vector,
+                southcarolina_vector,
+                southdakota_vector,
+                tennessee_vector,
+                texas_vector,
+                utah_vector,
+                vermont_vector,
+                virginia_vector,
+                washington_vector,
+                westvirginia_vector,
+                wisconsin_vector,
+                wyoming_vector,
+                puertorico_vector)
+
+# Confirm all states, DC & PR were included. This should = 52.
+length(state_vector) / r 
+```
+
+```{r}
+# Add state vector to selected data set
+median_income<- cbind(state_vector, median_income)
+
+# Confirm change
+median_income
+```
+
+```{r}
+# Create individual vectors with the row numbers of interest (row 3 - num ppl, row 9 - median income). Each vector corresponds to the rows for a specific state. Create empty, master vector.
+
+initial_vector = c(3,9)
+master_vector = c()
+
+# Loop through each of the 52 states, and for each one use the iteration number of the loop as part of the equation. Then, append the resulting vector to the master vector. 
+for (i in 1:52){
+  vector = initial_vector+r*(i-1)
+  master_vector = append(master_vector, vector)}
+
+# Rename the vector
+row_numbers_income <- master_vector
+
+# Confirm row numbers make sense
+row_numbers_income
+```
+
+```{r}
+# Create tidy income dataset
+
+# Subset to the 2 observations of interest for each state, based on loop above. 
+tidy_median_income <- median_income[row_numbers_income, ]
+
+# Remove blank columns
+tidy_median_income <- tidy_median_income[,-c(3,5)]
+
+# Create vectors with variable names
+variable_name <- c("number", "median_income")
+variable_name <- rep(variable_name, times = 52) 
+
+# Combine vectors
+tidy_median_income <- cbind(variable_name, tidy_median_income)
+
+# Rearrange columns & remove blank variable column
+tidy_median_income <- tidy_median_income[,c(2,1,4:13)]
+
+# Confirm dataset looks right
+tidy_median_income
+```
+
+```{r}
+# Remove ',' from data in order to create numerical data
+for (i in 3:12){
+  tidy_median_income[,i] = gsub(",", "", tidy_median_income[,i])
+  tidy_median_income[,i] = as.numeric(tidy_median_income[,i])}
+
+# Confirm changes were made
+tidy_median_income
+```
+
+```{r}
+# Filter to median income columns
+filter_income <- filter(tidy_median_income, variable_name == "median_income")
+
+# Add new columns for Black-White ratio in median income
+filter_income <- mutate(filter_income,
+                             income_ratio = 
+                               `white_non_hispanic` / `black`) 
+```
+
+# No CIs for median income becuase it's not a RR or OR
+
+```{r}
+# Export dataset of median income
+write.csv(filter_income,"../3. Cleaned data files/tidy_median_income_3-30-24.csv", row.names = FALSE)
+```

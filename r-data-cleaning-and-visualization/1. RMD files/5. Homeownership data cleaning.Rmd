@@ -1,0 +1,258 @@
+---
+title: "Homeownership data cleaning"
+author: "Stephanie Veazie"
+date: "2022-12-20"
+output:
+  word_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Download data
+
+1. Go to https://data.census.gov/cedsci/
+
+2. Using the filter pane on the left-hand side of the page, under "Geography", select "State" then "All states with in the US, Puerto Rico, and the Island Areas." 
+
+3. Using the search bar, search for "s2502" then select "S2502 Demographic characteristics for occupied housing units"
+
+3. Under drop-down menu, select "2019: ACS 5-year estimates subject tables"
+
+7. Select "transpose."
+
+8. Download as a csv file. 
+
+# Import, clean, and export economic characteristics file
+
+```{r}
+# Load libraries
+library(tidyverse)
+library(dplyr)
+
+# Load data
+homeownership<-read_csv("../2. Raw data files/new_acs_homeownership_by_state_race_2015-2019.csv")
+```
+
+```{r}
+# Create dataset of columns that report variable name and data by race
+selected_homeownership<-homeownership[, c(1, 2, 5:13)]
+```
+
+```{r}
+# Simplify the column names
+colnames(selected_homeownership)<-c("variable", 
+                                      "total",
+                                      "white", 
+                                      "black", 
+                                      "AIAN", 
+                                      "asian", 
+                                      "NHPI", 
+                                      "other_race", 
+                                      "two_races", 
+                                      "hispanic", 
+                                      "white_non_hispanic")
+```
+
+```{r}
+# Create vectors for specific states. Specify r (# of rows/state.) 
+
+r<- 19
+
+alabama_vector<-rep("Alabama", times= r)
+alaska_vector<-rep("Alaska", times=r)
+arizona_vector<-rep("Arizona", times=r)
+arkansas_vector<-rep("Arkansas", times=r)
+california_vector<-rep("California", times=r)
+colorado_vector<-rep("Colorado", times=r)
+connecticut_vector<-rep("Connecticut", times=r)
+delaware_vector<-rep("Delaware", times=r)
+dc_vector<-rep("District of Columbia", times=r)
+florida_vector<-rep("Florida", times=r)
+georgia_vector<-rep("Georgia", times=r)
+hawaii_vector<-rep("Hawaii", times=r)
+idaho_vector<-rep("Idaho", times=r)
+illinois_vector<-rep("Illinois", times=r)
+indiana_vector<-rep("Indiana", times=r)
+iowa_vector<-rep("Iowa", times=r)
+kansas_vector<-rep("Kansas", times=r)
+kentucky_vector<-rep("Kentucky", times=r)
+louisiana_vector<-rep("Louisiana", times=r)
+maine_vector<-rep("Maine", times=r)
+maryland_vector<-rep("Maryland", times=r)
+massachusetts_vector<-rep("Massachusetts", times=r)
+michigan_vector<-rep("Michigan", times=r)
+minnesota_vector<-rep("Minnesota", times=r)
+mississippi_vector<-rep("Mississippi", times=r)
+missouri_vector<-rep("Missouri", times=r)
+montana_vector<-rep("Montana", times=r)
+nebraska_vector<-rep("Nebraska", times=r)
+nevada_vector<-rep("Nevada", times=r)
+newhampshire_vector<-rep("New Hampshire", times=r)
+newjersey_vector<-rep("New Jersey", times=r)
+newmexico_vector<-rep("New Mexico", times=r)
+newyork_vector<-rep("New York", times=r)
+northcarolina_vector<-rep("North Carolina", times=r)
+northdakota_vector<-rep("North Dakota", times=r)
+ohio_vector<-rep("Ohio", times=r)
+oklahoma_vector<-rep("Oklahoma", times=r)
+oregon_vector<-rep("Oregon", times=r)
+pennsylvania_vector<-rep("Pennsylvania", times=r)
+rhodeisland_vector<-rep("Rhode Island", times=r)
+southcarolina_vector<-rep("South Carolina", times=r)
+southdakota_vector<-rep("South Dakota", times=r)
+tennessee_vector<-rep("Tennessee", times=r)
+texas_vector<-rep("Texas", times=r)
+utah_vector<-rep("Utah", times=r)
+vermont_vector<-rep("Vermont", times=r)
+virginia_vector<-rep("Virginia", times=r)
+washington_vector<-rep("Washington", times=r)
+westvirginia_vector<-rep("West Virginia", times=r)
+wisconsin_vector<-rep("Wisconsin", times=r)
+wyoming_vector<-rep("Wyoming", times=r)
+puertorico_vector<-rep("Puerto Rico", times=r)
+```
+
+```{r}
+# Create a single state vector made up of all the individual state vectors. 
+state_vector<-c(alabama_vector, 
+                alaska_vector, 
+                arizona_vector,
+                arkansas_vector, 
+                california_vector,
+                colorado_vector,
+                connecticut_vector,
+                delaware_vector,
+                dc_vector,
+                florida_vector, 
+                georgia_vector,
+                hawaii_vector,
+                idaho_vector, 
+                illinois_vector,
+                indiana_vector, 
+                iowa_vector, 
+                kansas_vector,
+                kentucky_vector,
+                louisiana_vector,
+                maine_vector,
+                maryland_vector,
+                massachusetts_vector, 
+                michigan_vector,
+                minnesota_vector,
+                mississippi_vector,
+                missouri_vector,
+                montana_vector,
+                nebraska_vector,
+                nevada_vector,
+                newhampshire_vector,
+                newjersey_vector,
+                newmexico_vector,
+                newyork_vector,
+                northcarolina_vector,
+                northdakota_vector,
+                ohio_vector,
+                oklahoma_vector,
+                oregon_vector,
+                pennsylvania_vector,
+                rhodeisland_vector,
+                southcarolina_vector,
+                southdakota_vector,
+                tennessee_vector,
+                texas_vector,
+                utah_vector,
+                vermont_vector,
+                virginia_vector,
+                washington_vector,
+                westvirginia_vector,
+                wisconsin_vector,
+                wyoming_vector,
+                puertorico_vector)
+```
+
+```{r}
+# Add state vector to selected data set
+selected_homeownership<- cbind(state_vector, selected_homeownership)
+```
+
+```{r}
+# Create individual vectors with the row numbers of interest (row 3-number of occupied homes, row 15- number renter-occupied units). Each vector corresponds to the rows for a specific state. Create empty, master vector.
+
+initial_vector = c(3, 15)
+master_vector = c()
+
+# Loop through each of the 52 states, and for each one use the iteration number of the loop as part of the equation. Then, append the resulting vector to the master vector. 
+for (i in 1:52){
+  vector = initial_vector+r*(i-1)
+  master_vector = append(master_vector, vector)}
+
+# Rename the vector
+row_numbers_homeownership <- master_vector
+```
+
+```{r}
+# Create tidy dataset
+
+# Subset to the 2 observations of interest for each state, based on loop above. 
+tidy_homeownership<-selected_homeownership[row_numbers_homeownership, ]
+
+# Remove the current variable vector that just has observations that say "estimate"
+tidy_homeownership<- tidy_homeownership[, -2]
+
+# Create a new vector with the variable names
+variable<-rep(c("total_num_occupied_homes", "num_renter_occupied_homes"), times=52)
+
+# Combine data label vector & tidy employment dataset
+tidy_homeownership<-cbind(variable, tidy_homeownership)
+
+# Put state vector first
+tidy_homeownership<- tidy_homeownership[,c(2,1,3:12)]
+```
+
+```{r}
+# Remove ',' from data in order to create numerical data
+for (i in 3:12){
+  tidy_homeownership[,i] = gsub("%", "", tidy_homeownership[,i])
+  tidy_homeownership[,i] = gsub(",", "", tidy_homeownership[,i])
+  tidy_homeownership[,i] = as.numeric(tidy_homeownership[,i])}
+```
+
+```{r}
+# Pivot wider so each state's data is on 1 row.
+tidy_homeownership<- tidy_homeownership %>% pivot_wider(names_from= variable, values_from = c("total", "white", "black", "AIAN", "asian", "NHPI", "other_race", "two_races", "hispanic", "white_non_hispanic"), names_glue="{variable}_{.value}")
+```
+
+```{r}
+# Export dataset of all races
+write.csv(tidy_homeownership,"../3. Cleaned data files/tidy_renters_all_races_3-30-24.csv", row.names = FALSE)
+```
+
+```{r}
+# Subset White & Black data. 
+tidy_homeownership_bw<- tidy_homeownership %>% select(ends_with(c("state_vector", "total", "white_non_hispanic", "black")))
+```
+
+```{r}
+# Create new dataset w/ RRs
+tidy_homeownership_bw <- 
+  mutate(tidy_homeownership_bw, 
+         white_renter_occupied_homes_percent = 
+           num_renter_occupied_homes_white_non_hispanic/
+           total_num_occupied_homes_white_non_hispanic, 
+         
+         black_renter_occupied_homes_percent = 
+           num_renter_occupied_homes_black / 
+           total_num_occupied_homes_black
+  ) 
+
+
+tidy_homeownership_bw<- mutate(tidy_homeownership_bw,
+                               renters_RR = black_renter_occupied_homes_percent /
+                                 white_renter_occupied_homes_percent)
+```
+
+```{r}
+# Export dataset of white-black data
+write.csv(tidy_homeownership_bw,"../3. Cleaned data files/tidy_renters_black_white_3-30-24.csv", row.names = FALSE)
+```

@@ -1,0 +1,290 @@
+---
+title: "Employment data cleaning"
+author: "Stephanie Veazie"
+date: "2022-12-2"
+output:
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Download data
+
+1. Go to https://data.census.gov/cedsci/
+
+2. Select "advanced search." 
+
+3. Using the filter pane on the left-hand side of the page, under "Geography", select "State" then "All states with in the US, Puerto Rico, and the Island Areas." 
+
+4. Under "Topics," select "Employment" then "Employment and labor force status."
+
+5. Click blue "Search" button in the bottom right-hand corner.
+
+6. Select "S2301 Employment status"
+
+7. Under drop-down menu, select "2019: ACS 5-year estimates subject tables"
+
+8. Select "transpose."
+
+9. Download as a csv file. 
+
+# Import, clean, and export economic characteristics file
+
+```{r}
+# Load libraries
+library(tidyverse)
+library(dplyr)
+
+# Import data
+employment_data<-read_csv("../2. Raw data files/new_acs_employment_by_state_race_2015-2019.csv")
+```
+
+```{r}
+# Create dataset of columns that report variable name and data by race
+selected_employment_data<-employment_data[, c(1, 2, 15:23)]
+
+# Confirm change
+selected_employment_data
+```
+
+```{r}
+# Simplify the column names
+colnames(selected_employment_data)<-c("variable", 
+                                      "total",
+                                      "white", 
+                                      "black", 
+                                      "AIAN", 
+                                      "asian", 
+                                      "NHPI", 
+                                      "other_race", 
+                                      "two_races", 
+                                      "hispanic", 
+                                      "white_non_hispanic")
+
+# Confirm change
+colnames(selected_employment_data)
+```
+
+```{r}
+# Create vectors for specific states. Specify r (# of rows/state.) 
+# NOTE - Puerto Rico comes at the end of the list for all ACS datasets.
+
+r<- 13
+
+alabama_vector<-rep("Alabama", times= r)
+alaska_vector<-rep("Alaska", times=r)
+arizona_vector<-rep("Arizona", times=r)
+arkansas_vector<-rep("Arkansas", times=r)
+california_vector<-rep("California", times=r)
+colorado_vector<-rep("Colorado", times=r)
+connecticut_vector<-rep("Connecticut", times=r)
+delaware_vector<-rep("Delaware", times=r)
+dc_vector<-rep("District of Columbia", times=r)
+florida_vector<-rep("Florida", times=r)
+georgia_vector<-rep("Georgia", times=r)
+hawaii_vector<-rep("Hawaii", times=r)
+idaho_vector<-rep("Idaho", times=r)
+illinois_vector<-rep("Illinois", times=r)
+indiana_vector<-rep("Indiana", times=r)
+iowa_vector<-rep("Iowa", times=r)
+kansas_vector<-rep("Kansas", times=r)
+kentucky_vector<-rep("Kentucky", times=r)
+louisiana_vector<-rep("Louisiana", times=r)
+maine_vector<-rep("Maine", times=r)
+maryland_vector<-rep("Maryland", times=r)
+massachusetts_vector<-rep("Massachusetts", times=r)
+michigan_vector<-rep("Michigan", times=r)
+minnesota_vector<-rep("Minnesota", times=r)
+mississippi_vector<-rep("Mississippi", times=r)
+missouri_vector<-rep("Missouri", times=r)
+montana_vector<-rep("Montana", times=r)
+nebraska_vector<-rep("Nebraska", times=r)
+nevada_vector<-rep("Nevada", times=r)
+newhampshire_vector<-rep("New Hampshire", times=r)
+newjersey_vector<-rep("New Jersey", times=r)
+newmexico_vector<-rep("New Mexico", times=r)
+newyork_vector<-rep("New York", times=r)
+northcarolina_vector<-rep("North Carolina", times=r)
+northdakota_vector<-rep("North Dakota", times=r)
+ohio_vector<-rep("Ohio", times=r)
+oklahoma_vector<-rep("Oklahoma", times=r)
+oregon_vector<-rep("Oregon", times=r)
+pennsylvania_vector<-rep("Pennsylvania", times=r)
+rhodeisland_vector<-rep("Rhode Island", times=r)
+southcarolina_vector<-rep("South Carolina", times=r)
+southdakota_vector<-rep("South Dakota", times=r)
+tennessee_vector<-rep("Tennessee", times=r)
+texas_vector<-rep("Texas", times=r)
+utah_vector<-rep("Utah", times=r)
+vermont_vector<-rep("Vermont", times=r)
+virginia_vector<-rep("Virginia", times=r)
+washington_vector<-rep("Washington", times=r)
+westvirginia_vector<-rep("West Virginia", times=r)
+wisconsin_vector<-rep("Wisconsin", times=r)
+wyoming_vector<-rep("Wyoming", times=r)
+puertorico_vector<-rep("Puerto Rico", times=r)
+```
+
+```{r}
+# Create a single state vector made up of all the individual state vectors. 
+state_vector<-c(alabama_vector, 
+                alaska_vector, 
+                arizona_vector,
+                arkansas_vector, 
+                california_vector,
+                colorado_vector,
+                connecticut_vector,
+                delaware_vector,
+                dc_vector,
+                florida_vector, 
+                georgia_vector,
+                hawaii_vector,
+                idaho_vector, 
+                illinois_vector,
+                indiana_vector, 
+                iowa_vector, 
+                kansas_vector,
+                kentucky_vector,
+                louisiana_vector,
+                maine_vector,
+                maryland_vector,
+                massachusetts_vector, 
+                michigan_vector,
+                minnesota_vector,
+                mississippi_vector,
+                missouri_vector,
+                montana_vector,
+                nebraska_vector,
+                nevada_vector,
+                newhampshire_vector,
+                newjersey_vector,
+                newmexico_vector,
+                newyork_vector,
+                northcarolina_vector,
+                northdakota_vector,
+                ohio_vector,
+                oklahoma_vector,
+                oregon_vector,
+                pennsylvania_vector,
+                rhodeisland_vector,
+                southcarolina_vector,
+                southdakota_vector,
+                tennessee_vector,
+                texas_vector,
+                utah_vector,
+                vermont_vector,
+                virginia_vector,
+                washington_vector,
+                westvirginia_vector,
+                wisconsin_vector,
+                wyoming_vector,
+                puertorico_vector)
+
+# Confirm all states, DC & PR were included. This should = 52.
+length(state_vector) / r 
+```
+
+```{r}
+# Add state vector to selected data set
+selected_employment_data_states<- cbind(state_vector, selected_employment_data)
+
+# Confirm change
+colnames(selected_employment_data_states)
+```
+
+```{r}
+# Create individual vectors with the row numbers of interest (row 3-total population and row 12-unemployment rate). Each vector corresponds to the rows for a specific state. Create empty, master vector.
+
+initial_vector = c(3, 12)
+master_vector = c()
+
+# Loop through each of the 52 states, and for each one use the iteration number of the loop as part of the equation. Then, append the resulting vector to the master vector. 
+for (i in 1:52){
+  vector = initial_vector+r*(i-1)
+  master_vector = append(master_vector, vector)}
+
+# Rename the vector
+row_numbers_employment <- master_vector
+
+# Confirm row numbers make sense
+row_numbers_employment
+```
+
+```{r}
+# Create tidy dataset
+
+# Subset to the 3 observations of interest for each state, based on loop above. 
+tidy_employment<-selected_employment_data_states[row_numbers_employment, ]
+
+# Remove the current variable vector that just has observations that say 
+#"estimate"
+tidy_employment<- tidy_employment[, -2]
+
+# Create a new vector with the variable names
+variable<-rep(c("total_pop", "unemployment"), times=52)
+
+# Combine data label vector & tidy employment dataset
+tidy_employment_rev<-cbind(variable, tidy_employment)
+
+# Confirm dataset is 104 rows long
+tidy_employment_rev
+```
+
+```{r}
+# Remove ',' and '%' from data in order to create numerical data
+for (i in 3:12){
+  tidy_employment_rev[,i] = gsub("%", "", tidy_employment_rev[,i])
+  tidy_employment_rev[,i] = gsub(",", "", tidy_employment_rev[,i])
+  tidy_employment_rev[,i] = as.numeric(tidy_employment_rev[,i])}
+
+# Confirm change
+tidy_employment_rev
+```
+
+
+```{r}
+# Reorder columns so state column is first. 
+tidy_unemployment<- tidy_employment_rev[,c(2,1,3:12)]
+
+# Confirm change
+tidy_unemployment
+```
+
+```{r}
+# Pivot wider so each state's data is on 1 row.
+tidy_unemployment<- tidy_unemployment %>% pivot_wider(names_from= variable, values_from = c("total", "white", "black", "AIAN", "asian", "NHPI", "other_race", "two_races", "hispanic", "white_non_hispanic"), names_glue="{variable}_{.value}")
+
+#Confirm change
+tidy_unemployment
+```
+
+```{r}
+# Export dataset of all races
+write.csv(tidy_employment,"../3. Cleaned data files/tidy_unemployment_all_races_3-30-24.csv", row.names = FALSE)
+```
+
+```{r}
+# Subset White & Black data. 
+tidy_unemployment_bw<- tidy_unemployment %>% select(ends_with(c("state_vector", "white_non_hispanic", "black")))
+```
+
+```{r}
+# Create RR
+
+# Add column with White:Black ratio in unemployment
+tidy_unemployment_bw<- mutate(tidy_unemployment_bw, 
+      unemployment_rr = 
+        unemployment_black /
+        unemployment_white_non_hispanic)
+
+# Confirm change
+tidy_unemployment_bw
+```
+
+```{r}
+# Export dataset 
+write.csv(tidy_unemployment_bw,"../3. Cleaned data files/tidy_unemployment_black_white_3-30-24.csv", row.names = FALSE)
+```
+

@@ -1,0 +1,144 @@
+---
+title: "Merge datasets"
+author: "Stephanie Veazie"
+date: "2022-12-20"
+output:
+  word_document: default
+---
+
+```{r}
+# Load library
+library(tidyverse)
+library(foreign)
+```
+
+# Import education data
+
+```{r}
+# Import data
+no_college<- read.csv("../3. Cleaned data files/tidy_no_college_25_and_older_3-30-24.csv")
+
+# Remove Puerto Rico
+no_college <- no_college[-40,]
+
+# Limit to 2 columns of interest
+no_college<- no_college[, c("state_vector", "edu_RR")]
+
+# Put in order of state name
+no_college<- no_college[order(no_college$state_vector),]
+```
+
+# Import employment data
+
+```{r}
+# Import data
+unemployment<- read.csv("../3. Cleaned data files/tidy_unemployment_black_white_3-30-24.csv")
+
+# Remove Puerto Rico, limit to 3 columns of interest
+unemployment<- unemployment[-52,c("state_vector", "unemployment_rr")]
+
+# Put in order of state name
+unemployment<- unemployment[order(unemployment$state_vector),]
+```
+
+# Import income data
+
+```{r}
+# Import data
+income<- read.csv("../3. Cleaned data files/tidy_median_income_3-30-24.csv")
+
+# Remove Puerto Rico, limit to 2 columns of interest
+income<- income[-52,c("state_vector", "income_ratio")]
+
+# Put in order of state name
+income<- income[order(income$state_vector),]
+```
+
+# Import homeownership data
+
+```{r}
+# Import data
+renters<- read.csv("../3. Cleaned data files/tidy_renters_black_white_3-30-24.csv")
+
+# Remove Puerto Rico, limit to 2 columns of interest
+renters<- renters[-52,c("state_vector", "renters_RR")]
+
+# Put in order of state name
+renters<- renters[order(renters$state_vector),]
+```
+
+# Import incarceration data
+
+```{r}
+# Import and subset incarceration data
+incarceration<- read.csv("../3. Cleaned data files/incarceration_black_white_15-64_3-30-24.csv")
+
+# Limit to 2 columns of interest
+incarceration<- incarceration[, c("state", "incarceration_RR")]
+colnames(incarceration)<- c("state_vector", "incarceration_RR")
+```
+
+# Combine data
+
+```{r}
+# Merge education & employment datasets
+structural_racism <- merge(no_college, unemployment, by.x = "state_vector", by.y = "state_vector")
+
+# Add income dataset
+structural_racism <- merge(income, structural_racism, by.x = "state_vector", by.y = "state_vector")
+
+# Add renters dataset
+structural_racism <- merge(renters, structural_racism, by.x = "state_vector", by.y = "state_vector")
+
+# Add incarceration dataset
+structural_racism <- merge(incarceration, structural_racism, by.x = "state_vector", by.y = "state_vector")
+```
+
+
+```{r}
+# Rename columns
+colnames(structural_racism)<- c("state", 
+                                "incarceration_RR",
+                                "renters_RR",
+                                "median_income_ratio",
+                                "no_college_RR",
+                                "unemployment_RR")
+```
+
+```{r}
+# Export dataset to csv (all obs)
+write.csv(structural_racism,"../3. Cleaned data files/structural_racism_3-30-24.csv", row.names = FALSE)
+
+#Export dataset to dta (all obs)
+write.dta(
+  structural_racism,
+  "../3. Cleaned data files/structural_racism_3-30-24.dta")
+```
+
+```{r}
+# Remove DC row
+structural_racism_no_dc <- 
+  structural_racism[-9,]
+
+# Export dataset to csv (no DC)
+write.csv(structural_racism_no_dc,"../3. Cleaned data files/structural_racism_no_dc_3-30-24.csv", row.names = FALSE)
+
+# Export dataset to dta (no DC)
+write.dta(
+  structural_racism_no_dc,
+  "../3. Cleaned data files/structural_racism_no_dc_3-30-24.dta")
+```
+
+# Calculate median for each domain (all obs)
+
+```{r}
+structural_racism <- read.csv("../3. Cleaned data files/structural_racism_3-30-24.csv")
+```
+
+```{r}
+median_education <- median(structural_racism$no_college_RR, na.rm= TRUE)
+median_unemployment <- median(structural_racism$unemployment_RR, na.rm= TRUE)
+median_income <- median(structural_racism$median_income_ratio, na.rm= TRUE)
+median_renters <- median(structural_racism$renters_RR, na.rm= TRUE)
+median_incarceration <- median(structural_racism$incarceration_RR, na.rm= TRUE)
+```

@@ -1,0 +1,391 @@
+---
+title: "Incarceration data cleaning with new denominators"
+author: "Stephanie Veazie"
+date: "2023-05-05"
+output: html_document
+---
+
+# Import data from Bureau of Justice Statistics
+
+1. Go to https://csat.bjs.ojp.gov/advanced-query
+
+2. Under "Query type" select "offender characteristics." 
+
+3. Under "category" select "year-end population."
+
+4. Under "sex" select "all."
+
+5. Under "variable 1" select "race/hispanic ethnicity of inmate." 
+
+6. Under "jurisdiction" select "all."
+
+7. Under "year" select 2015-2019. 
+
+8. Hit "submit." 
+
+Warning from BJS website: Users are cautioned against making state-to-state comparisons with CSAT-Prisoners because states have very different offender profiles. Some states have unified prison and jail systems, while in other states only offenders with a sentence of more than one year serve sentences in prison. NCRP only includes offenders serving sentences in prisons.
+
+9. Select "ok. 
+
+10. Select "export to Excel." 
+
+11. Save Excel file as a csv file. 
+
+# Import data from US Census Bureau website
+
+1. Go to the US Census Bureau's Population & Housing Unit Estimates website-
+https://www.census.gov/programs-surveys/popest/technical-documentation/research/evaluation-estimates/2020-evaluation-estimates/2010s-state-detail.html
+
+2. Download the Excel sheet titled "Annual State Resident Population Estimates for 6 Race Groups (5 Race Alone Groups and Two or More Races) by Age, Sex, and Hispanic Origin: April 1, 2010 to July 1, 2019; April 1, 2020; and July 1, 2020 (SC-EST2020-ALLDATA6) [<1.0 MB]" 
+
+3. Download the accompanying "File Layout" PDF 
+
+# Load Census Bureau data into R 
+
+```{r}
+# Load libraries
+library(tidyverse)
+library(dplyr)
+
+# Import CSV
+residents<- read_csv("../2. Raw data files/us_census_residents_estimates_2010-2020.csv")
+```
+
+```{r}
+# Select variables of interest
+selected_residents<- select(residents, c("STATE", "NAME", "ORIGIN", "RACE", "AGE", "POPESTIMATE2015", "POPESTIMATE2016","POPESTIMATE2017", "POPESTIMATE2018","POPESTIMATE2019"))
+
+# Filter to non-hispanic individuals
+selected_residents<- filter(selected_residents, ORIGIN == 1)
+```
+
+```{r}
+# Filter to Black or White individuals
+selected_residents<- filter(selected_residents, RACE == 1 | RACE == 2) 
+```
+
+```{r}
+# Filter to those aged 15-64
+selected_residents <- selected_residents %>% filter(AGE %in% (15:64))
+```
+
+```{r}
+# Group by state & race
+by_state_race<- group_by(selected_residents, NAME, RACE)
+
+# Sum residential info by group
+resident_summary<- as_data_frame(
+  summarize(by_state_race, sum_2015 = sum(POPESTIMATE2015), sum_2016 = sum(POPESTIMATE2016), sum_2017 = sum(POPESTIMATE2017), sum_2018 = sum(POPESTIMATE2018), sum_2019 = sum(POPESTIMATE2019))
+)
+```
+
+```{r}
+# Label race data
+resident_summary<- resident_summary %>%
+  mutate(
+    race = case_when(
+      RACE == 1 ~ "white_non_hispanic", 
+      RACE == 2 ~ "black_non_hispanic"))
+
+# Remove duplicative race row
+resident_summary <- resident_summary[,-2]
+```
+
+```{r}
+# Pivot wider so each state's data is on 1 row.
+residents_wide<- resident_summary %>% pivot_wider(names_from= race, values_from = c("sum_2015", "sum_2016", "sum_2017", "sum_2018", "sum_2019"), names_glue="{.value}_{race}")
+```
+
+```{r}
+colnames(residents_wide)<- c("State", 
+                             "num_residents_2015_white_nh", 
+                             "num_residents_2015_black_nh", 
+                             "num_residents_2016_white_nh", 
+                             "num_residents_2016_black_nh", 
+                             "num_residents_2017_white_nh", 
+                             "num_residents_2017_black_nh", 
+                             "num_residents_2018_white_nh", 
+                             "num_residents_2018_black_nh", 
+                             "num_residents_2019_white_nh", 
+                             "num_residents_2019_black_nh" 
+                             )
+```
+
+```{r}
+tidy_residents<- residents_wide[order(residents_wide$State),]
+```
+
+# Load BJS data into R
+
+```{r}
+incarceration<- read_csv("../2. Raw data files/bjs_incarceration_by_state_race_2015-2019.csv")
+```
+
+```{r}
+# Rename columns
+colnames(incarceration)<- c("state", "race_ethnicity_of_inmate", "year_2015", "year_2016", "year_2017", "year_2018", "year_2019")
+
+# Remove 1st row of data with duplicate row names
+incarceration<- incarceration[-1,]
+
+# Create a data frame
+incarceration<- as.data.frame(incarceration)
+```
+
+```{r}
+# Change * to NA
+incarceration<- incarceration %>%
+  mutate(across(c(year_2015, year_2016, year_2017, year_2018, year_2019), na_if, "*"))
+```
+
+```{r}
+# Export dataset of partially cleaned data
+write.csv(incarceration,"../3. Cleaned data files/incarceration_partly_clean_new_estimates.csv", row.names = FALSE)
+```
+
+```{r}
+# Make rows 3-7 numeric data
+incarceration[3:7] <- as.data.frame(apply(incarceration[3:7], 2, as.numeric))
+
+# Rename dataset
+tidy_incarceration <- incarceration
+```
+
+```{r}
+# Create vectors for specific states. Specify r (# of rows/state.) 
+# NOTE - Puerto Rico is not in this dataset and DC comes at the end
+
+r<- 5
+
+alabama_vector<-rep("Alabama", times= r)
+alaska_vector<-rep("Alaska", times=r)
+arizona_vector<-rep("Arizona", times=r)
+arkansas_vector<-rep("Arkansas", times=r)
+california_vector<-rep("California", times=r)
+colorado_vector<-rep("Colorado", times=r)
+connecticut_vector<-rep("Connecticut", times=r)
+delaware_vector<-rep("Delaware", times=r)
+florida_vector<-rep("Florida", times=r)
+georgia_vector<-rep("Georgia", times=r)
+hawaii_vector<-rep("Hawaii", times=r)
+idaho_vector<-rep("Idaho", times=r)
+illinois_vector<-rep("Illinois", times=r)
+indiana_vector<-rep("Indiana", times=r)
+iowa_vector<-rep("Iowa", times=r)
+kansas_vector<-rep("Kansas", times=r)
+kentucky_vector<-rep("Kentucky", times=r)
+louisiana_vector<-rep("Louisiana", times=r)
+maine_vector<-rep("Maine", times=r)
+maryland_vector<-rep("Maryland", times=r)
+massachusetts_vector<-rep("Massachusetts", times=r)
+michigan_vector<-rep("Michigan", times=r)
+minnesota_vector<-rep("Minnesota", times=r)
+mississippi_vector<-rep("Mississippi", times=r)
+missouri_vector<-rep("Missouri", times=r)
+montana_vector<-rep("Montana", times=r)
+nebraska_vector<-rep("Nebraska", times=r)
+nevada_vector<-rep("Nevada", times=r)
+newhampshire_vector<-rep("New Hampshire", times=r)
+newjersey_vector<-rep("New Jersey", times=r)
+newmexico_vector<-rep("New Mexico", times=r)
+newyork_vector<-rep("New York", times=r)
+northcarolina_vector<-rep("North Carolina", times=r)
+northdakota_vector<-rep("North Dakota", times=r)
+ohio_vector<-rep("Ohio", times=r)
+oklahoma_vector<-rep("Oklahoma", times=r)
+oregon_vector<-rep("Oregon", times=r)
+pennsylvania_vector<-rep("Pennsylvania", times=r)
+rhodeisland_vector<-rep("Rhode Island", times=r)
+southcarolina_vector<-rep("South Carolina", times=r)
+southdakota_vector<-rep("South Dakota", times=r)
+tennessee_vector<-rep("Tennessee", times=r)
+texas_vector<-rep("Texas", times=r)
+utah_vector<-rep("Utah", times=r)
+vermont_vector<-rep("Vermont", times=r)
+virginia_vector<-rep("Virginia", times=r)
+washington_vector<-rep("Washington", times=r)
+westvirginia_vector<-rep("West Virginia", times=r)
+wisconsin_vector<-rep("Wisconsin", times=r)
+wyoming_vector<-rep("Wyoming", times=r)
+dc_vector<-rep("District of Columbia", times=1)
+```
+
+```{r}
+# Create a single state vector made up of all the individual state vectors. 
+state_vector<-c(alabama_vector, 
+                alaska_vector, 
+                arizona_vector,
+                arkansas_vector, 
+                california_vector,
+                colorado_vector,
+                connecticut_vector,
+                delaware_vector,
+                florida_vector, 
+                georgia_vector,
+                hawaii_vector,
+                idaho_vector, 
+                illinois_vector,
+                indiana_vector, 
+                iowa_vector, 
+                kansas_vector,
+                kentucky_vector,
+                louisiana_vector,
+                maine_vector,
+                maryland_vector,
+                massachusetts_vector, 
+                michigan_vector,
+                minnesota_vector,
+                mississippi_vector,
+                missouri_vector,
+                montana_vector,
+                nebraska_vector,
+                nevada_vector,
+                newhampshire_vector,
+                newjersey_vector,
+                newmexico_vector,
+                newyork_vector,
+                northcarolina_vector,
+                northdakota_vector,
+                ohio_vector,
+                oklahoma_vector,
+                oregon_vector,
+                pennsylvania_vector,
+                rhodeisland_vector,
+                southcarolina_vector,
+                southdakota_vector,
+                tennessee_vector,
+                texas_vector,
+                utah_vector,
+                vermont_vector,
+                virginia_vector,
+                washington_vector,
+                westvirginia_vector,
+                wisconsin_vector,
+                wyoming_vector,
+                dc_vector)
+```
+
+```{r}
+# Add state vector to selected data set
+tidy_incarceration<- cbind(state_vector, tidy_incarceration)
+```
+
+```{r}
+#Remove column #2
+tidy_incarceration<- tidy_incarceration[,-2]
+
+# Put in order of state name
+tidy_incarceration<- tidy_incarceration[order(tidy_incarceration$state_vector),]
+```
+
+```{r}
+# Pivot wider so each state's data is on 1 row.
+tidy_incarceration_wide<- tidy_incarceration %>% pivot_wider(names_from= race_ethnicity_of_inmate, values_from = c("year_2015", "year_2016", "year_2017", "year_2018", "year_2019"), names_glue="{.value}_{race_ethnicity_of_inmate}")
+```
+
+```{r}
+# Export dataset of partially cleaned data
+write.csv(tidy_incarceration_wide,"../3. Cleaned data files/incarceration_all_races_3-30-24.csv", row.names = FALSE)
+```
+
+# Combine BJS & US Census Bureau Datasets
+
+```{r}
+# Subset White & Black data 
+
+# Subset data
+tidy_incarceration_black_white<- tidy_incarceration_wide %>% select(ends_with(c("state_vector", "Black, non-Hispanic", "White, non-Hispanic", "black_non_hispanic", "white_non_hispanic")))
+
+```
+
+```{r}
+# Merge 2 datasets
+tidy_incarceration <- merge(tidy_residents, tidy_incarceration_black_white, by.x = "State", by.y = "state_vector")
+```
+
+```{r}
+#Rename columns
+colnames(tidy_incarceration)<- c("state", 
+                             "num_residents_2015_white_nh", 
+                             "num_residents_2015_black_nh", 
+                             "num_residents_2016_white_nh", 
+                             "num_residents_2016_black_nh", 
+                             "num_residents_2017_white_nh", 
+                             "num_residents_2017_black_nh", 
+                             "num_residents_2018_white_nh", 
+                             "num_residents_2018_black_nh", 
+                             "num_residents_2019_white_nh", 
+                             "num_residents_2019_black_nh", 
+                             "num_incarcerated_2015_black_nh",
+                             "num_incarcerated_2016_black_nh",
+                             "num_incarcerated_2017_black_nh",
+                             "num_incarcerated_2018_black_nh",
+                             "num_incarcerated_2019_black_nh",
+                             "num_incarcerated_2015_white_nh",
+                             "num_incarcerated_2016_white_nh",
+                             "num_incarcerated_2017_white_nh",
+                             "num_incarcerated_2018_white_nh",
+                             "num_incarcerated_2019_white_nh"
+                             )
+```
+
+```{r}
+# Calculate incarceration rate for white and black populations each year
+tidy_incarceration<- mutate(tidy_incarceration, 
+                            white_incarceration_rate_2015 = 
+                              num_incarcerated_2015_white_nh * 100000 / num_residents_2015_white_nh, 
+                            
+                            white_incarceration_rate_2016 = 
+                              num_incarcerated_2016_white_nh * 100000 / num_residents_2016_white_nh, 
+                            
+                            white_incarceration_rate_2017 = 
+                              num_incarcerated_2017_white_nh * 100000 / num_residents_2017_white_nh, 
+                            
+                            white_incarceration_rate_2018 = 
+                              num_incarcerated_2018_white_nh * 100000 / num_residents_2018_white_nh, 
+                            
+                            white_incarceration_rate_2019 = 
+                              num_incarcerated_2019_white_nh * 100000 / num_residents_2019_white_nh, 
+                            
+                            black_incarceration_rate_2015 = 
+                              num_incarcerated_2015_black_nh * 100000 / num_residents_2015_black_nh, 
+                            
+                            black_incarceration_rate_2016 = 
+                              num_incarcerated_2016_black_nh * 100000 / num_residents_2016_black_nh,
+                            
+                            black_incarceration_rate_2017 = 
+                              num_incarcerated_2017_black_nh * 100000 / num_residents_2017_black_nh,
+                            
+                            black_incarceration_rate_2018 = 
+                              num_incarcerated_2018_black_nh * 100000 / num_residents_2018_black_nh,
+                            
+                            black_incarceration_rate_2019 = 
+                              num_incarcerated_2019_black_nh * 100000 / num_residents_2019_black_nh
+)
+```
+
+```{r}
+# Create average white & black incarceration rates for 2015-2019
+tidy_incarceration<- mutate(tidy_incarceration, 
+                            white_incarceration_rate_2015_2019 = 
+                              rowMeans(tidy_incarceration[,22:26], na.rm=TRUE))
+
+tidy_incarceration<- mutate(tidy_incarceration, 
+                            black_incarceration_rate_2015_2019 = 
+                              rowMeans(tidy_incarceration[,27:31], na.rm=TRUE))
+```
+                              
+
+```{r}
+# Add column with black-white incarceration RR
+tidy_incarceration<- mutate(tidy_incarceration, 
+       incarceration_RR = 
+        black_incarceration_rate_2015_2019 / white_incarceration_rate_2015_2019)
+```
+
+
+```{r}
+# Export black-white data
+write.csv(tidy_incarceration,"../3. Cleaned data files/incarceration_black_white_15-64_3-30-24.csv", row.names = FALSE)
+```
+
