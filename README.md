@@ -19,4 +19,4 @@ If you are unfamiliar with github, but familiar with R and RStudio as well as St
 
 ### Copyright
 
-
+This code is licenced under the MIT licence. See the LICENSE file for more information. 
