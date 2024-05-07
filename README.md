@@ -15,7 +15,7 @@ This work provides an example of how latent profile analysis can be used to char
 
 If your intention is to replicate our analysis and you are familiar with github, please clone this repository. All of the data cleaning and data visualization steps are contained within the numerically ordered files in the r-data-cleaning-and-visualization folder. The Stata code to conduct the latent profile analysis appears in the stata-lpa-analysis folder. 
 
-If you are unfamiliar with github, but familiar with R and RStudio as well as Stata, you may wish to download the analysis files by navigating to Code directory and downloading a ZIP file of the repository. You can download the raw version of these files and open the .Rmd files locally within RStudio and the .do file within Stata. You will also need to download the appropriate data files found in the Data directory. You can then run the code chunks within RStudio and the run the .do file within Stata to replicate the analysis. 
+If you are unfamiliar with github, but familiar with R and RStudio as well as Stata, you may wish to download the analysis files by navigating to Code directory and downloading a ZIP file of the repository. You can download the raw version of these files and open the .Rmd files locally within RStudio and the .do file within Stata. You will also need to download the appropriate data files found in the respective r-data-cleaning-and-visualization and stata-lpa-analysis folders. You can then run the code chunks within RStudio and the run the .do file within Stata to replicate the analysis. 
 
 ### Copyright
 
